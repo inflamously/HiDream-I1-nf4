@@ -33,6 +33,13 @@ MODEL_CONFIGS = {
         "num_inference_steps": 16,
         "shift": 3.0,
         "scheduler": FlashFlowMatchEulerDiscreteScheduler
+    },
+    "custom": {
+        "path": f"{MODEL_PREFIX}/HiDream-I1-Fast-nf4",
+        "guidance_scale": 0.0,
+        "num_inference_steps": 24,
+        "shift": 2.0,
+        "scheduler": FlashFlowMatchEulerDiscreteScheduler
     }
 }
 
@@ -42,6 +49,7 @@ def log_vram(msg: str):
 
 
 def load_models(model_type: str):
+    global tokenizer_4, text_encoder_4, transformer, pipe
     config = MODEL_CONFIGS[model_type]
     
     tokenizer_4 = PreTrainedTokenizerFast.from_pretrained(LLAMA_MODEL_NAME)
