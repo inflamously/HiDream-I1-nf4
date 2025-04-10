@@ -1,66 +1,80 @@
 import torch
-from transformers import LlamaForCausalLM, PreTrainedTokenizerFast
+from diffusers import BitsAndBytesConfig
+from transformers import AutoModelForCausalLM, AutoTokenizer
 
 from . import HiDreamImagePipeline
 from . import HiDreamImageTransformer2DModel
 from .schedulers.fm_solvers_unipc import FlowUniPCMultistepScheduler
 from .schedulers.flash_flow_match import FlashFlowMatchEulerDiscreteScheduler
 
-
 MODEL_PREFIX = "azaneko"
-LLAMA_MODEL_NAME = "hugging-quants/Meta-Llama-3.1-8B-Instruct-GPTQ-INT4"
-
+LLAMA_MODEL_NAME = "unsloth/Meta-Llama-3.1-8B-Instruct"
 
 # Model configurations
 MODEL_CONFIGS = {
-    "dev": {
+    "dev-nf4": {
         "path": f"{MODEL_PREFIX}/HiDream-I1-Dev-nf4",
         "guidance_scale": 0.0,
         "num_inference_steps": 28,
         "shift": 6.0,
         "scheduler": FlashFlowMatchEulerDiscreteScheduler
     },
-    "full": {
+    "full-nf4": {
         "path": f"{MODEL_PREFIX}/HiDream-I1-Full-nf4",
         "guidance_scale": 5.0,
         "num_inference_steps": 50,
         "shift": 3.0,
         "scheduler": FlowUniPCMultistepScheduler
     },
-    "fast": {
+    "fast-nf4": {
         "path": f"{MODEL_PREFIX}/HiDream-I1-Fast-nf4",
         "guidance_scale": 0.0,
         "num_inference_steps": 16,
         "shift": 3.0,
         "scheduler": FlashFlowMatchEulerDiscreteScheduler
     },
-    "custom": {
-        "path": f"{MODEL_PREFIX}/HiDream-I1-Fast-nf4",
+    "dev": {
+        "path": f"{MODEL_PREFIX}/HiDream-I1-Dev",
         "guidance_scale": 0.0,
-        "num_inference_steps": 24,
-        "shift": 2.0,
+        "num_inference_steps": 28,
+        "shift": 6.0,
         "scheduler": FlashFlowMatchEulerDiscreteScheduler
-    }
+    },
+    "full": {
+        "path": f"{MODEL_PREFIX}/HiDream-I1-Full",
+        "guidance_scale": 5.0,
+        "num_inference_steps": 50,
+        "shift": 3.0,
+        "scheduler": FlowUniPCMultistepScheduler
+    },
+    "fast": {
+        "path": f"{MODEL_PREFIX}/HiDream-I1-Fast",
+        "guidance_scale": 0.0,
+        "num_inference_steps": 16,
+        "shift": 3.0,
+        "scheduler": FlashFlowMatchEulerDiscreteScheduler
+    },
 }
 
 
 def log_vram(msg: str):
-    print(f"{msg} (used {torch.cuda.memory_allocated() / 1024**2:.2f} MB VRAM)\n")
+    print(f"{msg} (used {torch.cuda.memory_allocated() / 1024 ** 2:.2f} MB VRAM)\n")
 
 
 def load_models(model_type: str):
     global tokenizer_4, text_encoder_4, transformer, pipe
     config = MODEL_CONFIGS[model_type]
-    
-    tokenizer_4 = PreTrainedTokenizerFast.from_pretrained(LLAMA_MODEL_NAME)
+
+    tokenizer_4 = AutoTokenizer.from_pretrained(LLAMA_MODEL_NAME)
     log_vram("✅ Tokenizer loaded!")
-    
-    text_encoder_4 = LlamaForCausalLM.from_pretrained(
+
+    text_encoder_4 = AutoModelForCausalLM.from_pretrained(
         LLAMA_MODEL_NAME,
         output_hidden_states=True,
         output_attentions=True,
         return_dict_in_generate=True,
         torch_dtype=torch.bfloat16,
+        quantization_config=BitsAndBytesConfig(load_in_8bit=True),
         device_map="auto",
     )
     log_vram("✅ Text encoder loaded!")
@@ -71,7 +85,7 @@ def load_models(model_type: str):
         torch_dtype=torch.bfloat16
     )
     log_vram("✅ Transformer loaded!")
-    
+
     pipe = HiDreamImagePipeline.from_pretrained(
         config["path"],
         scheduler=config["scheduler"](num_train_timesteps=1000, shift=config["shift"], use_dynamic_shifting=False),
@@ -82,7 +96,7 @@ def load_models(model_type: str):
     pipe.transformer = transformer
     log_vram("✅ Pipeline loaded!")
     pipe.enable_sequential_cpu_offload()
-    
+
     return pipe, config
 
 
@@ -92,16 +106,16 @@ def generate_image(pipe: HiDreamImagePipeline, model_type: str, prompt: str, res
     config = MODEL_CONFIGS[model_type]
     guidance_scale = config["guidance_scale"]
     num_inference_steps = config["num_inference_steps"]
-    
+
     # Parse resolution
     width, height = resolution
- 
+
     # Handle seed
     if seed == -1:
         seed = torch.randint(0, 1000000, (1,)).item()
-    
+
     generator = torch.Generator("cuda").manual_seed(seed)
-    
+
     images = pipe(
         prompt,
         height=height,
@@ -111,6 +125,5 @@ def generate_image(pipe: HiDreamImagePipeline, model_type: str, prompt: str, res
         num_images_per_prompt=1,
         generator=generator
     ).images
-    
-    return images[0], seed
 
+    return images[0], seed
