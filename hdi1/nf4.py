@@ -7,53 +7,52 @@ from . import HiDreamImageTransformer2DModel
 from .schedulers.fm_solvers_unipc import FlowUniPCMultistepScheduler
 from .schedulers.flash_flow_match import FlashFlowMatchEulerDiscreteScheduler
 
-MODEL_PREFIX = "azaneko"
 LLAMA_MODEL_NAME = "unsloth/Meta-Llama-3.1-8B-Instruct"
 
 # Model configurations
 MODEL_CONFIGS = {
     "dev-nf4": {
-        "path": f"{MODEL_PREFIX}/HiDream-I1-Dev-nf4",
+        "path": f"azaneko/HiDream-I1-Dev-nf4",
         "guidance_scale": 0.0,
         "num_inference_steps": 28,
         "shift": 6.0,
         "scheduler": FlashFlowMatchEulerDiscreteScheduler
     },
     "full-nf4": {
-        "path": f"{MODEL_PREFIX}/HiDream-I1-Full-nf4",
+        "path": f"azaneko/HiDream-I1-Full-nf4",
         "guidance_scale": 5.0,
         "num_inference_steps": 50,
         "shift": 3.0,
         "scheduler": FlowUniPCMultistepScheduler
     },
     "fast-nf4": {
-        "path": f"{MODEL_PREFIX}/HiDream-I1-Fast-nf4",
+        "path": f"azaneko/HiDream-I1-Fast-nf4",
         "guidance_scale": 0.0,
         "num_inference_steps": 16,
         "shift": 3.0,
         "scheduler": FlashFlowMatchEulerDiscreteScheduler
     },
-    "dev": {
-        "path": f"{MODEL_PREFIX}/HiDream-I1-Dev",
-        "guidance_scale": 0.0,
-        "num_inference_steps": 28,
-        "shift": 6.0,
-        "scheduler": FlashFlowMatchEulerDiscreteScheduler
-    },
-    "full": {
-        "path": f"{MODEL_PREFIX}/HiDream-I1-Full",
-        "guidance_scale": 5.0,
-        "num_inference_steps": 50,
-        "shift": 3.0,
-        "scheduler": FlowUniPCMultistepScheduler
-    },
-    "fast": {
-        "path": f"{MODEL_PREFIX}/HiDream-I1-Fast",
-        "guidance_scale": 0.0,
-        "num_inference_steps": 16,
-        "shift": 3.0,
-        "scheduler": FlashFlowMatchEulerDiscreteScheduler
-    },
+    # "dev": {
+    #     "path": f"HiDream-ai/HiDream-I1-Dev",
+    #     "guidance_scale": 0.0,
+    #     "num_inference_steps": 28,
+    #     "shift": 6.0,
+    #     "scheduler": FlashFlowMatchEulerDiscreteScheduler
+    # },
+    # "full": {
+    #     "path": f"HiDream-ai/HiDream-I1-Full",
+    #     "guidance_scale": 5.0,
+    #     "num_inference_steps": 50,
+    #     "shift": 3.0,
+    #     "scheduler": FlowUniPCMultistepScheduler
+    # },
+    # "fast": {
+    #     "path": f"HiDream-ai/HiDream-I1-Fast",
+    #     "guidance_scale": 0.0,
+    #     "num_inference_steps": 16,
+    #     "shift": 3.0,
+    #     "scheduler": FlashFlowMatchEulerDiscreteScheduler
+    # },
 }
 
 

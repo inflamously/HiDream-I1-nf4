@@ -1,4 +1,3 @@
-import torch
 import gradio as gr
 import logging
 
