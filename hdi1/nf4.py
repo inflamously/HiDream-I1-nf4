@@ -73,7 +73,7 @@ def load_models(model_type: str):
         output_attentions=True,
         return_dict_in_generate=True,
         torch_dtype=torch.bfloat16,
-        quantization_config=BitsAndBytesConfig(load_in_8bit=True),
+        quantization_config=BitsAndBytesConfig(load_in_8bit=True, llm_int8_enable_fp32_cpu_offload=True),
         device_map="auto",
     )
     log_vram("✅ Text encoder loaded!")
